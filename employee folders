@@ -1,0 +1,114 @@
+function registropdf() {
+
+  //CONFIG
+  var colnom1=2;
+  var colcorreo=3;
+  var colnom2=4;
+  var colape1=5;
+  var colape2=6;
+  var colcc=7;
+  var colcel=8;
+  var coldireccion=9;
+  var coldpto=10;
+  var colciudad=11;
+  var colsalud=12;
+  var colpension=13;
+  var colnumcuenta=14;
+  var coltipo=15;
+  var colbanco=16;
+  var colfotocopia=17;
+  var colfirma=18;
+  var colrut=19;
+  var colrutcopia=20;
+  var colcargo=21;
+  var colsalario=22;
+  var colcodigo=23;
+  var verificacion= 24;
+
+  //IDS DOCUMENTOS
+  //PLANTILLA DE LA FACTURA
+  const IDplantilla="1Z3jfBGR45Cx_LXn9xErndX1leInTE_pdeSaQLpFYiKw";
+  //CARPETA DE DOCS
+  const IDdocs= "1OLsUWYDx3wwVVwhJvNShvKSQ5xJ7VdKB";
+  //CARPETA PDFS
+  const IDpdf="1ZaTCbq_-yhUm8oQaDky6XcxdQF9Ay9OG";
+
+  //CNX
+  //const doc= DocumentApp.openById(IDplantilla);
+  const archivo= DriveApp.getFileById(IDplantilla);
+  const carpetadocs= DriveApp.getFolderById(IDdocs);
+  const carpetapdf= DriveApp.getFolderById(IDpdf);
+  const sheets= SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  Logger.log(sheets);
+  const hoja= SpreadsheetApp.getActiveSpreadsheet().getSheetByName("respuestasregistro");
+  Logger.log(hoja);
+
+  //LLEVAR DATOS AL DOCUMENTO
+  var fila= SpreadsheetApp.getActiveRange().getRow();
+  var nombre1=hoja.getRange(fila,colnom1).getValue();
+  var nombre2=hoja.getRange(fila,colnom2).getValue();
+  var apellido1=hoja.getRange(fila,colape1).getValue();
+  var apellido2=hoja.getRange(fila,colape2).getValue();
+  var correo=hoja.getRange(fila,colcorreo).getValue();
+  var documento=hoja.getRange(fila,colcc).getValue();
+  var celular=hoja.getRange(fila,colcel).getValue();
+  var direccion=hoja.getRange(fila,coldireccion).getValue();
+  var ciudad=hoja.getRange(fila,colciudad).getValue();
+  var departamento=hoja.getRange(fila,coldpto).getValue();
+  var salud=hoja.getRange(fila,colsalud).getValue();
+  var pensiones=hoja.getRange(fila,colpension).getValue();
+  var ncuenta=hoja.getRange(fila,colnumcuenta).getValue();
+  var tipos=hoja.getRange(fila,coltipo).getValue();
+  var banco=hoja.getRange(fila,colbanco).getValue();
+  var cargo=hoja.getRange(fila,colcargo).getValue();
+  var salario=hoja.getRange(fila,colsalario).getValue();
+  var codigo=hoja.getRange(fila,colcodigo).getValue();
+  var nombres= nombre1+" "+nombre2;
+  var apellidos= apellido1+" "+apellido2;
+
+  //CREAR COPIA DE LA PLANTILLA Y ALAMCENAR EN LA CARPETA DE DOCUMENTOS
+  var copiaplantilla=archivo.makeCopy(carpetadocs);
+  var copiaID=copiaplantilla.getId();
+  var namedoc="Registro-"+ codigo+"-"+documento;
+  copiaplantilla.setName(namedoc);
+  var doc= DocumentApp.openById(copiaID);
+  doc.setName(namedoc);
+
+  //REEMPLAZAR VARIABLES
+  doc.getBody().replaceText("{{cod}}",codigo);
+  doc.getBody().replaceText("{{nombre}}",nombres);
+  doc.getBody().replaceText("{{apellido}}",apellidos);
+  doc.getBody().replaceText("{{cc}}",documento);
+  doc.getBody().replaceText("{{correo}}",correo);
+  doc.getBody().replaceText("{{cel}}",celular);
+  doc.getBody().replaceText("{{direccion}}",direccion);
+  doc.getBody().replaceText("{{ciudad}}",ciudad);
+  doc.getBody().replaceText("{{departamento}}",departamento);
+  doc.getBody().replaceText("{{salud}}",salud);
+  doc.getBody().replaceText("{{pension}}",pensiones);
+  doc.getBody().replaceText("{{cargo}}",cargo);
+  doc.getBody().replaceText("{{salario}}",salario);
+  doc.getBody().replaceText("{{banco}}",banco);
+  doc.getBody().replaceText("{{tipo}}",tipos);
+  doc.getBody().replaceText("{{cuenta}}",ncuenta);
+  doc.saveAndClose();
+
+  //CREAR PDF Y ALMACENAR EN LA CARPETA DE PDF
+  const pdfblob=copiaplantilla.getAs(MimeType.PDF);
+  var factura= carpetapdf.createFile(pdfblob);
+  var urlfactura= factura.getUrl();
+  hoja.getRange(fila,verificacion).setValue(urlfactura);
+  return urlfactura;
+
+
+  
+}
+
+function onOpen(){
+  var ui= SpreadsheetApp.getUi();
+  var menu= ui.createMenu("Menu de opciones");
+  menu.addItem("PDF Registro","registropdf").addToUi();
+  menu.addItem("Crear nueva carpeta","carpeta").addToUi();
+  menu.addItem("Cargar documentos a la carpeta","crearcopias").addToUi();
+
+}
