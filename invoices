@@ -1,0 +1,158 @@
+function pdf() {
+
+  //CONFIG
+  var colNombre=2;
+  var colDoc=3;
+  var colLugar=4;
+  var colDir=5;
+  var coltel=6;
+  var coldescrip=7;
+  var colciudad=8;
+  var coltipos=9;
+  var colvalor=10;
+  var colbanco=11;
+  var colncuenta=12;
+  var coltipoc=13;
+  var colfecha=14;
+  var colfirma=16;
+  var colimp=20;
+  var colrete=21;
+  var coltotal=22;
+  var colLetras=23;
+  var colconse=24;
+  var verificacion= 25;
+  var colcorreo= 19;
+  var enviado=27;
+
+  //IDS DOCUMENTOS
+  //PLANTILLA DE LA FACTURA
+  const IDplantilla="1o1ILh8-I9IPM-Fr8W3nBBK4-nrTzIeWkhUTK6AEiZ_Y";
+  //CARPETA DE DOCS
+  const IDdocs= "1Yfprh_3U0YwATxdExMfaEOCJCmJJWrWN";
+  //CARPETA PDFS
+  const IDpdf="1yyjo-JqCNNelOckS_GqCyb44_lP40irH";
+  
+  
+  //CNX
+  //const doc= DocumentApp.openById(IDplantilla);
+  const archivo= DriveApp.getFileById(IDplantilla);
+  const carpetadocs= DriveApp.getFolderById(IDdocs);
+  const carpetapdf= DriveApp.getFolderById(IDpdf);
+  const sheets= SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  Logger.log(sheets);
+  const hoja= SpreadsheetApp.getActiveSpreadsheet().getSheetByName("respuestas");
+  Logger.log(hoja);
+
+
+  //LLEVAR DATOS AL DOCUMENTO
+  var fila= SpreadsheetApp.getActiveRange().getRow();
+  var nombre=hoja.getRange(fila,colNombre).getValue();
+  var documento=hoja.getRange(fila,colDoc).getValue();
+  var lugar=hoja.getRange(fila,colLugar).getValue();
+  var direccion=hoja.getRange(fila,colDir).getValue();
+  var telefono=hoja.getRange(fila,coltel).getValue();
+  var descripcion=hoja.getRange(fila,coldescrip).getValue();
+  var ciudad=hoja.getRange(fila,colciudad).getValue();
+  var tipos=hoja.getRange(fila,coltipos).getValue();
+  var valor=hoja.getRange(fila,colvalor).getValue();
+  var banco=hoja.getRange(fila,colbanco).getValue();
+  var ncuenta=hoja.getRange(fila,colncuenta).getValue();
+  var tipoc=hoja.getRange(fila,coltipoc).getValue();
+  var fecha=hoja.getRange(fila,colfecha).getDisplayValue();
+  var firma=hoja.getRange(fila,colfirma).getValue();
+  firma=firma.toString().replace("https://drive.google.com/open?id=", "");
+  Logger.log(firma);
+  var img=DriveApp.getFileById(firma);
+  var importe=hoja.getRange(fila,colimp).getValue();
+  var retencion=hoja.getRange(fila,colrete).getValue();
+  var total=hoja.getRange(fila,coltotal).getValue();
+  var letras=hoja.getRange(fila,colLetras).getValue();
+  var consecutivo=hoja.getRange(fila,colconse).getValue();
+  var correo= hoja.getRange(fila,colcorreo).getValue();
+  
+
+
+  //CREAR COPIA DE LA PLANTILLA Y ALAMCENAR EN LA CARPETA DE DOCUMENTOS
+  var copiaplantilla=archivo.makeCopy(carpetadocs);
+  var copiaID=copiaplantilla.getId();
+  var namedoc="Factura "+ nombre;
+  copiaplantilla.setName(namedoc);
+  var doc= DocumentApp.openById(copiaID);
+  doc.setName(namedoc);
+
+
+  //REEMPLAZAR VARIABLES
+  doc.getBody().replaceText("{{nombre}}",nombre);
+  doc.getBody().replaceText("{{cc}}",documento);
+  doc.getBody().replaceText("{{municipio}}",lugar);
+  doc.getBody().replaceText("{{direccion}}",direccion);
+  doc.getBody().replaceText("{{tel}}",telefono);
+  doc.getBody().replaceText("{{detalle}}",descripcion);
+  doc.getBody().replaceText("{{ciudad}}",ciudad);
+  doc.getBody().replaceText("{{lista}}",tipos);
+  doc.getBody().replaceText("{{valor}}",valor);
+  doc.getBody().replaceText("{{banco}}",banco);
+  doc.getBody().replaceText("{{num}}",ncuenta);
+  doc.getBody().replaceText("{{tipo}}",tipoc);
+  doc.getBody().replaceText("{{fecha}}",fecha);
+  doc.getBody().insertImage(26,img).setWidth(130).setHeight(40);
+  doc.getBody().replaceText("{{import}}",importe);
+  doc.getBody().replaceText("{{vbruto}}",valor);
+  doc.getBody().replaceText("{{rete}}",retencion);
+  doc.getBody().replaceText("{{total}}",total);
+  doc.getBody().replaceText("{{letras}}",letras);
+  doc.getBody().replaceText("{{oo}}",consecutivo);
+  doc.saveAndClose();
+
+  //CREAR PDF Y ALMACENAR EN LA CARPETA DE PDF
+  const pdfblob=copiaplantilla.getAs(MimeType.PDF);
+  var factura= carpetapdf.createFile(pdfblob);
+  if(enviado=="Enviado"){
+    factura.addViewer(correo);
+  }else{
+    console.log("no")
+  }
+  var urlfactura= factura.getUrl();
+  hoja.getRange(fila,verificacion).setValue(urlfactura);
+  return urlfactura;
+
+
+}
+
+function enviarmail(){
+  const nombrehoja="respuestas";
+  const fila=1;
+  const columna=26;
+  const condicion="Completado";
+  const id="María de Enra";
+
+  const celdaactiva= SpreadsheetApp.getCurrentCell();
+  const valoractivo= celdaactiva.getValue();
+  const colactiva= celdaactiva.getColumn();
+  const filactiva= celdaactiva.getRow();
+  const hojactiva= celdaactiva.getSheet().getName();
+  const url=celdaactiva.getSheet().getRange(filactiva,25).getValue();
+  const cuerpo= ", se ha generado la siguiente cuenta de cobro por los servicios, bienes y/o productos sumistrados.";
+
+
+  const email= celdaactiva.getSheet().getRange(filactiva,19).getValue();
+  const nombre= celdaactiva.getSheet().getRange(filactiva,2).getValue();
+  const mensaje= "Estimado "+nombre+cuerpo+"\n"+"\n"+url;
+  const asunto= "Cuenta de cobro ENRA de "+nombre+".";
+
+  if(nombrehoja==hojactiva && filactiva>fila && colactiva==columna && valoractivo==condicion){
+    MailApp.sendEmail(email,asunto,mensaje,{name:id});
+    celdaactiva.getSheet().getRange(filactiva,27).setValue("Enviado");
+
+  }
+  
+  
+
+}
+
+function onOpen(){
+  var ui= SpreadsheetApp.getUi();
+  var menu= ui.createMenu("PDF Factura");
+  menu.addItem("Generar certificado","pdf").addToUi();
+
+}
