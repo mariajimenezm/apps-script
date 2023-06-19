@@ -1,0 +1,71 @@
+function carpeta() {
+  const libro= SpreadsheetApp.getActiveSpreadsheet();
+  const hoja= libro.getActiveSheet();
+  console.log(hoja);
+  const nombrehoja=hoja.getSheetName();
+  console.log(nombrehoja);
+  const fila=hoja.getActiveCell().getRow();
+  console.log(fila);
+  const rango=hoja.getRange(fila,1,1,hoja.getLastColumn()).getValues();
+  console.log(rango);
+  const celdaactiva= SpreadsheetApp.getCurrentCell();
+
+  var uno= hoja.getRange(fila,3).getValue();
+  var dos= hoja.getRange(fila,4).getValue();
+  var tres= hoja.getRange(fila,5).getValue();
+  var nombre= uno+"_"+dos+"_"+tres;
+  console.log(nombre);
+
+
+  //carpeta donde se van a crear las carepetas
+  var carpetaprincipal=DriveApp.getFolderById("1XcQy47A779HBbEiJIRZmH5O7h1RDNSto");
+  var nueva=carpetaprincipal.createFolder(nombre);
+  var urlcarpetanueva=nueva.getUrl();
+  console.log(urlcarpetanueva);
+  celdaactiva.getSheet().getRange(fila,31).setValue(urlcarpetanueva);
+
+  
+}
+
+function crearcopias(){
+
+  const libro= SpreadsheetApp.getActiveSpreadsheet();
+  const hoja= libro.getActiveSheet();
+  console.log(hoja);
+  const nombrehoja=hoja.getSheetName();
+  console.log(nombrehoja);
+  const fila=hoja.getActiveCell().getRow();
+  console.log(fila);
+  const rango=hoja.getRange(fila,1,1,hoja.getLastColumn()).getValues();
+  console.log(rango);
+
+  //OBTENER LOS LINKS DE LOS ARCHIVOS
+  var cedula=hoja.getRange(fila,19).getValue();
+  cedula=cedula.toString().replace("https://drive.google.com/open?id=", "");
+  console.log(cedula);
+  var firma=hoja.getRange(fila,20).getValue();
+  firma=firma.toString().replace("https://drive.google.com/open?id=", "");
+  console.log(firma);
+  var rut=hoja.getRange(fila,21).getValue();
+  rut=rut.toString().replace("https://drive.google.com/open?id=", "");
+  console.log(rut);
+
+
+  //ID DE LA CARPETA EMPLEADO
+  var link=hoja.getRange(fila,31).getValue();
+  link=link.toString().replace("https://drive.google.com/drive/folders/", "");
+  console.log(link);
+  var idcarpeta="1i9Kg0hyGXz5IapFn5QFCFhqwGxeXcWrK";
+  console.log(idcarpeta);
+  //
+  var carpetadestino=DriveApp.getFolderById(link);
+  //CREAR LAS COPIAS
+  var cedula1=DriveApp.getFileById(cedula);
+  var copiacedula=cedula1.makeCopy(carpetadestino);
+  var firma1=DriveApp.getFileById(firma);
+  var copiafirma=firma1.makeCopy(carpetadestino);
+  var rut1=DriveApp.getFileById(rut);
+  var copiarut=rut1.makeCopy(carpetadestino);
+  
+
+}
