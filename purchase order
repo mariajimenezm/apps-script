@@ -1,0 +1,83 @@
+const idplantilla="1VueSZyPynIqbJxZlAiQ9XVotNu_BJJu4wdho9Qyv1PM";
+const idcarpeta="15auiNmFRL2dU-RXOIL2ZEYhfhANdAhuY";
+const idcarpetapdf="1uqYKAHg2YuAidWmhYUT85yGzhFeNrfZu";
+
+
+function permisos() {
+  DriveApp.getFolders();
+  DocumentApp.openById(idplantilla);
+  GmailApp.getDrafts();
+  
+}
+
+function pdfformulario(evento) {
+  var respuestas=evento.namedValues
+
+  var correo= respuestas['Dirección de correo electrónico'][0]
+  var descripcion= respuestas['Descripción'][0]
+  var descuento= respuestas['Descuento'][0]
+  var nit= respuestas['NIT'][0]
+  var proveedor= respuestas['Proveedor'][0]
+  var valoruni= respuestas['Valor'][0]
+  var fecha= respuestas['Fecha'][0]
+  var observaciones= respuestas['Observaciones'][0]
+  var cantidad= respuestas['Cantidad'][0]
+  var calculariva= respuestas['IVA'][0]
+
+  var bruto= cantidad*valoruni;
+  console.log(bruto);
+
+  if(calculariva=="Si"){
+
+    var iva= bruto*0.19;
+    console.log(iva);
+  }else{
+    var iva=0;
+  }
+
+  var subotal= bruto-descuento;
+  console.log(subotal);
+  var total= subotal+iva;
+  console.log(total);
+
+  var carpeta= DriveApp.getFolderById(idcarpeta);
+  var archivoplantilla=DriveApp.getFileById(idplantilla);
+  var copiararchivo=archivoplantilla.makeCopy(nit);
+  var idarchivocopia=copiararchivo.getId();
+  var carpetapdf= DriveApp.getFolderById(idcarpetapdf);
+
+
+  var doc=DocumentApp.openById(idarchivocopia);
+  var txt=doc.getBody();
+  txt.replaceText("{{nit}}",nit);
+  txt.replaceText("{{fecha}}",fecha);
+  txt.replaceText("{{descripcion}}",descripcion);
+  txt.replaceText("{{cant}}",cantidad);
+  txt.replaceText("{{valoru}}",valoruni);
+  txt.replaceText("{{des}}",descuento);
+  txt.replaceText("{{valor}}",total);
+  txt.replaceText("{{bruto}}",bruto);
+  txt.replaceText("{{descuento}}",descuento);
+  txt.replaceText("{{subtotal}}",subotal);
+  txt.replaceText("{{iva}}",iva);
+  txt.replaceText("{{total}}",total);
+  txt.replaceText("{{proveedor}}",proveedor);
+  txt.replaceText("{{observaciones}}",observaciones);
+  txt.replaceText("{{cant}}",cantidad);
+  
+  doc.saveAndClose();
+
+  var blob=copiararchivo.getBlob();
+  var pdf= carpetapdf.createFile(blob);
+
+  const id="María de Enra";
+
+  GmailApp.sendEmail(correo,"Orden de compra "+proveedor, "Hola, se ha generado una orden de compra."+"\n"+"Team Enra.",
+  {
+    attachments:[pdf],
+    name:id
+  })
+
+  
+  
+}
